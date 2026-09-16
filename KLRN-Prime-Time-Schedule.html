@@ -1,0 +1,884 @@
+<html lang="en">
+  <head>
+    <script class="app-bootloader">
+      (function() {
+        const pendingUpdate = sessionStorage.getItem('pending-html-update');
+
+        if (!pendingUpdate) {
+          return;
+        }
+
+        sessionStorage.removeItem('pending-html-update');
+        document.documentElement.innerHTML = pendingUpdate;
+        
+        document.querySelectorAll('script').forEach((oldScript) => {
+          const newScript = document.createElement('script');
+
+          Array.from(oldScript.attributes).forEach((attr) => {
+            newScript.setAttribute(attr.name, attr.value);
+          });
+
+          newScript.textContent = oldScript.textContent;
+          oldScript.replaceWith(newScript);
+        });
+
+        window.stop();
+      })();
+    </script>
+    <meta charset="UTF-8" />
+    <meta name="app-version" content="1.0.0">
+    <title>KLRN Prime Time Schedule</title>  
+    <style>
+      :root {
+        --pbs-blue: #2638c4;
+        --pbs-navy-blue: #0a145a;
+        --pbs-medium-blue: #0f1e8c;
+        --pbs-light-blue: #486cd8;
+        --pbs-white: #ffffff;
+        --pbs-teal: #48d3cd;
+        --pbs-yellow: #ffcf00;
+        --pbs-coral: #fe704e;
+        --lighter-blue: #eef2ff;
+        --light-gray: #f4f5f7;
+        --lighter-gray: #fcfcfc;
+        --dark-teal: #349b96;
+      }
+      
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 0;
+      }
+
+      #toolbar {
+        text-align: center;
+        padding: 15px;
+        background: var(--lighter-gray);
+        border-bottom: 1px solid var(--dark-teal);
+      }
+
+      #toolbar button {
+        font-size: 10pt;
+        margin: 0 5px;
+        padding: 5px 12px;
+        background: var(--pbs-teal);
+        color: var(--pbs-white);
+        border: 1px solid var(--dark-teal);
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 10pt;
+      }
+
+      #toolbar button:hover {
+        background: var(--pbs-light-blue);
+      }
+
+      .calendar {
+        page: letter;
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        grid-template-rows:
+          40px
+          25px
+          repeat(5, minmax(0, 1fr));
+        width: calc(11in - 0.5in);
+        height: calc(8.5in - 0.5in - 0.1in);
+        margin: 0 auto;
+        border-top: 1px solid var(--pbs-navy-blue);
+        border-left: 1px solid var(--pbs-navy-blue);
+      }
+      
+      body.legal .calendar {
+        page: legal;
+        width: calc(14in - 0.5in);
+      }      
+
+      .calendar:has(#calendar-days:empty) {
+        border: 1px solid black;
+      }
+
+      .calendar:has(#calendar-days:empty) > div.month,
+      .calendar:has(#calendar-days:empty) > div:nth-child(8) {
+        border-right: none;
+      }
+
+      #calendar-days {
+        display: contents;
+      }
+
+      .month {
+        position: relative;
+        grid-column: 1 / 8;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 18pt;
+        font-weight: bold;
+        background: var(--pbs-blue);
+        color: var(--pbs-white);
+        border-right: 1px solid var(--pbs-navy-blue);
+        border-bottom: 4px solid var(--pbs-teal);
+        outline: none;
+      }
+
+      .month img {
+        height: 18pt;
+        position: absolute;
+        left: 1rem;
+      }
+
+      .day-header {
+        background: var(--lighter-blue);
+        color: var(--pbs-navy-blue);
+        border-top: 1px solid var(--pbs-navy-blue);
+        border-right: 1px solid var(--pbs-navy-blue);
+        border-bottom: 1px solid var(--pbs-navy-blue);
+        text-align: center;
+        font-size: 9pt;
+        font-weight: bold;
+        padding-top: 4px;
+      }
+
+      .day-header:last-child {
+        border-right: none;
+      }
+
+      .day {
+        display: flex;
+        flex-direction: column;
+        border-right: 1px solid var(--pbs-navy-blue);
+        border-bottom: 1px solid var(--pbs-navy-blue);
+        padding: 7px;
+        overflow: hidden;
+        font-size: 7pt;
+      }
+
+      .split-day {
+        display: flex;
+        flex-direction: column;
+        padding: 0;
+      }
+
+      .half-day {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        padding: 5px;
+        min-height: 0;
+      }
+
+      .half-divider {
+        border-top: 1px solid var(--pbs-light-blue);
+      }
+
+      .day-number {
+        flex: 0 0 auto;
+        text-align: center;
+        font-weight: bold;
+        color: var(--pbs-medium-blue);
+      }
+
+      .day.near-full,
+      .half-day.day.near-full {
+        background: rgb(from var(--pbs-yellow) r g b / 18%);
+      }
+
+      .day.overflow,
+      .half-day.overflow {
+        background: rgb(from var(--pbs-coral) r g b / 15%);
+      }
+
+      .content {
+        flex: 1 1 auto;
+        box-sizing: border-box;
+        min-height: 0;
+        overflow-y: hidden;
+        white-space: pre-wrap;
+        outline: none;
+        line-height: 1.4;
+      }
+
+      .content,
+      .content div:not(:first-child) {
+        margin: 0.5em 0 0;
+      }
+
+      .half-day .content,
+      .half-day .content div:not(:first-child) {
+        margin: 0.3em 0 0;
+      }
+
+      .content.shows div {
+        padding-left: 1.75em;
+        text-indent: -1.75em;
+      }
+
+      .time {
+        display: inline-block;
+        text-indent: 0;
+        font-weight: bold;
+        color: var(--pbs-blue);
+      }
+      
+      dialog {
+        min-width: 320px;
+        max-width: 450px;
+        padding: 24px;
+        border: none;
+        border-radius: 8px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+      }
+
+      dialog::backdrop {
+        background: rgba(0, 0, 0, 0.4);
+      }
+
+      #dialog-title {
+        margin: 0 0 12px;
+        font-size: 16pt;
+        color: var(--pbs-navy-blue);
+      }
+
+      #dialog-message {
+        margin-bottom: 20px;
+        white-space: pre-wrap;
+        line-height: 1.4;
+      }
+
+      #dialog-input {
+        width: 100%;
+        padding: 8px;
+        margin-bottom: 20px;
+        font-size: 11pt;
+        box-sizing: border-box;
+      }
+
+      #dialog-buttons {
+        display: flex;
+        justify-content: flex-end;
+        gap: 8px;
+      }
+
+      #dialog-buttons button {
+        min-width: 70px;
+        padding: 6px 14px;
+        border: 1px solid var(--dark-teal);
+        border-radius: 4px;
+        background: var(--pbs-teal);
+        color: var(--pbs-white);
+        cursor: pointer;
+      }
+
+      #dialog-buttons button:hover {
+        background: var(--pbs-light-blue);
+      }
+
+      #dialog-spinner {
+        width: 32px;
+        height: 32px;
+        margin: 0 auto 16px;
+        border: 4px solid var(--lighter-blue);
+        border-top-color: var(--pbs-blue);
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+      }
+
+      #dialog:has(#dialog-spinner:not([hidden])) {
+        text-align: center;
+      }
+      
+      #toolbar button:active,
+      #dialog-buttons button:active {
+        transform: translateY(1px);
+      }
+
+      #toolbar button:disabled,
+      #dialog-buttons button:disabled {
+        opacity: 0.6;
+        cursor: wait;
+      }      
+
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }      
+      
+      @media print {
+        * {
+          -webkit-print-color-adjust: exact;
+          print-color-adjust: exact;
+        }
+
+        #toolbar {
+          display: none;
+        }
+      }
+      
+      @page letter {
+        size: letter landscape;
+        margin: 0.25in;
+      }
+
+      @page legal {
+        size: legal landscape;
+        margin: 0.25in;
+      }      
+    </style>   
+  </head>
+  <body>
+    <div id="toolbar">
+      <button onclick="newCalendar()">New Calendar</button>
+      <button onclick="saveCalendar()">Save Calendar</button>
+      <button id="page-size-button" onclick="togglePageSize()">Legal Size</button>
+    </div>
+
+    <div class="calendar">
+      <div class="month">
+        <img
+          src="data:image/png;base64,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"
+          alt="KLRN logo"
+        />        
+        Prime Time Schedule -&nbsp;
+        <span contenteditable="true">January 2026</span>
+      </div>
+      <div class="day-header">Sunday</div>
+      <div class="day-header">Monday</div>
+      <div class="day-header">Tuesday</div>
+      <div class="day-header">Wednesday</div>
+      <div class="day-header">Thursday</div>
+      <div class="day-header">Friday</div>
+      <div class="day-header">Saturday</div>
+      <div id="calendar-days"></div>
+    </div>    
+  
+    <dialog id="dialog">
+      <h2 id="dialog-title"></h2>
+      <div id="dialog-spinner" hidden></div>
+      <div id="dialog-message"></div>      
+      <input id="dialog-input" hidden>
+      <div id="dialog-buttons">
+        <button id="dialog-ok">OK</button>
+        <button id="dialog-cancel">Cancel</button>
+      </div>
+    </dialog>
+
+    <script>
+      // ======================================================
+      // Configuration
+      // ======================================================
+      const APP = {
+        templateUrl: 'http://localhost/dev/klrn-calendar/template.php',
+        fileHandle: null,        
+        busyTimer: null,
+        
+        shouldStartNewCalendar() {
+          const value = sessionStorage.getItem('pending-new-calendar');
+          sessionStorage.removeItem('pending-new-calendar');
+          return value === 'true';
+        },        
+                
+        async promptForNewCalendar() {
+          const current = new Date();
+
+          let month = await DIALOG.prompt(
+            'New Calendar',
+            'Month (1-12):',
+            current.getMonth() + 1
+          );
+
+          if (month === null) {
+            return;
+          }
+
+          let year = await DIALOG.prompt(
+            'New Calendar',
+            'Year:',
+            current.getFullYear()
+          );
+
+          if (year === null) {
+            return;
+          }
+
+          month = parseInt(month, 10);
+          year = parseInt(year, 10);
+
+          if (isNaN(month) || month < 1 || month > 12) {
+            await DIALOG.alert(
+              'Invalid month',
+              'Month must be between 1 and 12.'
+            );
+            return;
+          }
+
+          if (isNaN(year) || year < 2026) {
+            await DIALOG.alert(
+              'Invalid year',
+              'Year must be a four-digit number above 2025.'
+            );
+            return;
+          }
+
+          generateCalendar(month - 1, year);
+        },
+        
+        async checkForUpdates() {
+          if (!this.templateUrl) {
+            return false;
+          }
+  
+          const html = await this.downloadTemplate();
+
+          if (!html) {
+            return false;
+          }
+
+          const doc = new DOMParser().parseFromString(html, 'text/html');
+          const serverVersion = doc.querySelector('meta[name="app-version"]')?.content;
+          const currentVersion = document.querySelector('meta[name="app-version"]')?.content;
+
+          if (
+            !serverVersion ||
+            !currentVersion ||
+            this.compareVersions(serverVersion, currentVersion) <= 0
+          ) {
+            return false;
+          }
+
+          return await DIALOG.confirmUpdate(html, serverVersion);
+        },        
+        
+        async downloadTemplate() {
+          DIALOG.showBusy('Checking for updates...');
+          
+          try {
+            const response = await fetch(this.templateUrl);
+            if (!response.ok) {
+              throw new Error(`Server returned ${response.status}`);
+            }
+            return await response.text();
+          }
+          catch (e) {
+            console.log('Could not check for updates:', e);
+            return null;
+          }
+          finally {
+            DIALOG.hideBusy();
+          }
+        },       
+        
+        compareVersions(v1, v2) {
+          const a = v1.split('.').map(Number);
+          const b = v2.split('.').map(Number);
+          const length = Math.max(a.length, b.length);
+
+          for (let i = 0; i < length; i++) {
+              const x = a[i] ?? 0;
+              const y = b[i] ?? 0;
+
+              if (x > y) {
+                  return 1;
+              }
+
+              if (x < y) {
+                  return -1;
+              }
+          }
+          return 0;
+        }     
+      };
+      
+      // ======================================================
+      // Dialog
+      // ======================================================
+      
+      const DIALOG = {
+        dialog: document.getElementById('dialog'),
+        title: document.getElementById('dialog-title'),
+        message: document.getElementById('dialog-message'),
+        input: document.getElementById('dialog-input'),
+        ok: document.getElementById('dialog-ok'),
+        cancel: document.getElementById('dialog-cancel'),
+        spinner: document.getElementById('dialog-spinner'),
+
+        show({
+          title = '',
+          message = '',
+          input = false,
+          spinner = false,
+          okText = 'OK',
+          showOK = true,
+          cancelText = 'Cancel',
+          showCancel = false,
+          defaultValue = '',
+          onOK = null,
+          onCancel = null
+        } = {}) {
+          this.title.textContent = title;
+          this.message.textContent = message;
+
+          this.spinner.hidden = !spinner;
+
+          this.input.hidden = !input;
+          this.input.value = defaultValue;
+
+          this.ok.textContent = okText;
+          this.ok.hidden = !showOK;
+
+          this.cancel.textContent = cancelText;
+          this.cancel.hidden = !showCancel;
+
+          this.ok.onclick = onOK;
+          this.cancel.onclick = onCancel;
+
+          this.dialog.showModal();
+
+          if (input) {
+            this.input.focus();
+            this.input.select();
+          }
+        },
+        
+        confirmUpdate(html, version) {
+          return new Promise((resolve) => {
+            this.show({
+              title: 'Update Available',
+              message: `Version ${version} is available. Update now?`,
+              okText: 'Update',
+              showCancel: true,
+
+              onOK: async () => {
+                this.dialog.close();
+                sessionStorage.setItem('pending-html-update', html);
+                sessionStorage.setItem('pending-new-calendar', 'true');
+                window.location.reload();
+              },
+
+              onCancel: () => {
+                this.dialog.close();
+                resolve(false);
+              }
+            });
+          });
+        },        
+
+        confirm(title, message) {
+          return new Promise((resolve) => {
+            this.show({
+              title,
+              message,
+              showCancel: true
+            });
+
+            this.ok.onclick = () => {
+              this.dialog.close();
+              resolve(true);
+            };
+
+            this.cancel.onclick = () => {
+              this.dialog.close();
+              resolve(false);
+            };
+          });
+        },
+
+        alert(title, message) {
+          return new Promise((resolve) => {
+            this.show({
+              title,
+              message
+            });
+
+            this.ok.onclick = () => {
+              this.dialog.close();
+              resolve();
+            };
+          });
+        },
+
+        prompt(title, message, defaultValue = '') {
+          return new Promise((resolve) => {
+            this.show({
+              title,
+              message,
+              input: true,
+              showCancel: true,
+              defaultValue
+            });
+
+            this.ok.onclick = () => {
+              const value = this.input.value;
+              this.dialog.close();
+              resolve(value);
+            };
+
+            this.cancel.onclick = () => {
+              this.dialog.close();
+              resolve(null);
+            };
+
+            this.input.onkeydown = (e) => {
+              if (e.key === 'Enter') {
+                this.ok.click();
+              }
+            };
+          });
+        },
+
+        showBusy(message) {
+          this.show({
+            message,
+            spinner: true,
+            showOK: false,
+            showCancel: false
+          });
+        },
+
+        hideBusy() {
+          this.dialog.close();
+        }
+      };   
+      
+      // ======================================================
+      // Initialization
+      // ======================================================      
+
+      initialize();
+      
+      function initialize() {
+        attachContentListeners();
+        formatAllDays();
+        checkAllDays();
+        if (APP.shouldStartNewCalendar()) {
+          APP.promptForNewCalendar();
+        }
+      }
+
+      function attachContentListeners() {
+        document.querySelectorAll('.content').forEach((el) => {
+          el.addEventListener('blur', () => {
+            formatDay(el);
+            checkOverflow(el.closest('.day'));
+          });
+
+          el.addEventListener('input', () => {
+            checkOverflow(el.closest('.day'));
+          });
+        });
+      }
+     
+      // ======================================================
+      // Calendar
+      // ====================================================== 
+
+      async function newCalendar() {
+        if (!(await DIALOG.confirm(
+          'New Calendar',
+          'This will clear the current calendar. Continue?'
+        ))) {
+          return;
+        }
+
+        if (await APP.checkForUpdates()) {
+          return;
+        }
+
+        await APP.promptForNewCalendar();
+      }
+
+      async function saveCalendar() {
+        formatAllDays();
+        checkAllDays();
+
+        try {
+          if (!APP.fileHandle) {
+            APP.fileHandle = await window.showSaveFilePicker({
+              suggestedName: 'KLRN-Prime-Time-Schedule.html',
+              types: [
+                {
+                  description: 'HTML Files',
+                  accept: {
+                    'text/html': ['.html']
+                  }
+                }
+              ]
+            });
+          }
+          const writable = await APP.fileHandle.createWritable();
+          await writable.write(document.documentElement.outerHTML);
+          await writable.close();
+        } catch (err) {
+          console.error(err);
+        }
+      }
+
+      function setMonthTitle(month, year) {
+        const monthNames = [
+          'January',
+          'February',
+          'March',
+          'April',
+          'May',
+          'June',
+          'July',
+          'August',
+          'September',
+          'October',
+          'November',
+          'December'
+        ];
+
+        document.querySelector('.month span').textContent =
+          `${monthNames[month]} ${year}`;
+      }
+
+      function generateCalendar(month, year) {
+        setMonthTitle(month, year);
+        const firstWeekday = new Date(year, month, 1).getDay();
+        const daysInMonth = new Date(year, month + 1, 0).getDate();
+        const cells = new Array(42).fill(null);
+
+        for (let day = 1; day <= daysInMonth; day++) {
+          cells[firstWeekday + day - 1] = {
+            day,
+            overflowDay: null
+          };
+        }
+
+        // Merge row 6 into row 5
+        for (let col = 0; col < 7; col++) {
+          const row5 = 28 + col;
+          const row6 = 35 + col;
+
+          if (cells[row6]) {
+            if (!cells[row5]) {
+              cells[row5] = {
+                day: null,
+                overflowDay: cells[row6].day
+              };
+            } else {
+              cells[row5].overflowDay = cells[row6].day;
+            }
+
+            cells[row6] = null;
+          }
+        }
+
+        // Render five rows
+        let html = '';
+        for (let i = 0; i < 35; i++) {
+          const cell = cells[i];
+
+          if (!cell) {
+            html += `<div class="day">
+                         <div class="content messages" contenteditable="true"></div>
+                     </div>`;
+            continue;
+          }
+
+          // Split day
+          if (cell.overflowDay !== null) {
+            html += `<div class="day split-day">
+                         <div class="half-day">${
+                           cell.day !== null
+                             ? `
+                             <div class="day-number">${cell.day}</div>
+                             <div class="content shows" contenteditable="true"></div>`
+                             : ''
+                         }
+                        </div>
+                    <div class="half-divider"></div>
+                    <div class="half-day">
+                        <div class="day-number">${cell.overflowDay}</div>
+                        <div class="content shows" contenteditable="true"></div>
+                    </div>
+                </div>`;
+          }
+
+          // Normal day
+          else {
+            html += `<div class="day">
+                         <div class="day-number">${cell.day}</div>
+                         <div class="content shows" contenteditable="true"></div>
+                     </div>`;
+          }
+        }
+
+        document.querySelector('#calendar-days').innerHTML = html;
+        attachContentListeners();
+        formatAllDays();
+        checkAllDays();
+      }
+      
+      // ======================================================
+      // Formatting
+      // ======================================================      
+      
+      function formatDay(el) {
+        const lines = el.innerText.split('\n').map((line) => line.trim());
+        let html = '';
+
+        for (const line of lines) {
+          if (!line) {
+            continue;
+          }
+
+          const match = line.match(
+            /^(\d{1,2}(?::\d{2})?)\s*([ap])\s*\.?\s*m\s*\.?\s*(.*)$/i
+          );
+
+          if (match) {
+            const normalizedTime = `${match[1]} ${match[2].toLowerCase()}.m.`;
+            html += `<div class="show-entry">`;
+            html += `<span class="time">${normalizedTime}</span> `;
+            html += `${match[3]}</div>`;
+          } else {
+            html += `<div>${line}</div>`;
+          }
+        }
+
+        el.innerHTML = html;
+      }    
+
+      function formatAllDays() {
+        document.querySelectorAll('.content').forEach((el) => {
+          formatDay(el);
+        });
+      }
+
+      function checkAllDays() {
+        document.querySelectorAll('.day').forEach((day) => {
+          checkOverflow(day);
+        });
+      }
+
+      function checkOverflow(day) {
+        const contents = day.querySelectorAll('.content');
+        for (const content of contents) {
+          const container =
+            content.closest('.half-day') || content.closest('.day');
+          container.classList.toggle(
+            'overflow',
+            content.scrollHeight > content.clientHeight
+          );
+        }
+      } 
+
+      function togglePageSize() {
+        const button = document.getElementById('page-size-button');
+        const legal = document.body.classList.toggle('legal');
+
+        button.textContent = legal
+          ? 'Letter Size'
+          : 'Legal Size';
+
+        console.log(`Page size: ${legal ? 'Legal' : 'Letter'}`);
+      }      
+    </script>
+  </body>
+</html>
