@@ -28,8 +28,8 @@ If `templateUrl` is empty or `null`, update checking is disabled.
 
 ## Development
 
-The application runs entirely in the browser. PHP is only used to provide the current HTML template for update checking.
+This app runs entirely in the browser. PHP is only used to provide the current HTML template for update checking.
 
 ## Planned
 
-- Drag-and-drop TV schedule parsing to seed calendar entries.
+- Drag-and-drop TV schedule parsing to seed calendar entries
