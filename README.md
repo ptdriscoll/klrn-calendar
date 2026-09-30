@@ -1,6 +1,10 @@
 # KLRN Calendar
 
+**Version 1.0.0**
+
 A browser-based tool for creating, maintaining and printing KLRN TV's monthly Prime Time Schedule.
+
+<img src="images/KLRN-calendar-Nov-2026.jpg" width="700" />
 
 ## How it works
 
