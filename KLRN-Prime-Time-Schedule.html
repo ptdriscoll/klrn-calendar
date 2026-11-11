@@ -1,6 +1,7 @@
-<html lang="en"><head>
+<html lang="en">
+  <head>
     <script class="app-bootloader">
-      (function() {
+      (function () {
         const pendingUpdate = sessionStorage.getItem('pending-html-update');
 
         if (!pendingUpdate) {
@@ -9,7 +10,7 @@
 
         sessionStorage.removeItem('pending-html-update');
         document.documentElement.innerHTML = pendingUpdate;
-        
+
         document.querySelectorAll('script').forEach((oldScript) => {
           const newScript = document.createElement('script');
 
@@ -24,9 +25,9 @@
         window.stop();
       })();
     </script>
-    <meta charset="UTF-8">
-    <meta name="app-version" content="1.0.0">
-    <title>KLRN Prime Time Schedule</title>  
+    <meta charset="UTF-8" />
+    <meta name="app-version" content="1.1.0" />
+    <title>KLRN Prime Time Schedule</title>
     <style>
       :root {
         --pbs-blue: #2638c4;
@@ -37,7 +38,7 @@
         --pbs-teal: #48d3cd;
         --pbs-yellow: #ffcf00;
         --pbs-coral: #fe704e;
-        --pbs-yellow-18pct: #fff4d6;        
+        --pbs-yellow-18pct: #fff4d6;
         --pbs-coral-15pct: #fee5df;
         --lighter-blue: #eef2ff;
         --lightest-blue: #f7f9ff;
@@ -45,7 +46,7 @@
         --lighter-gray: #fcfcfc;
         --dark-teal: #349b96;
       }
-      
+
       * {
         box-sizing: border-box;
       }
@@ -56,6 +57,23 @@
         padding: 0;
       }
 
+      body.drag-over::after {
+        content: 'Drop PDF to Import Schedule';
+        position: fixed;
+        inset: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(238, 242, 255, 0.95);
+        border: 4px dashed var(--pbs-blue);
+        border-radius: 8px;
+        color: var(--pbs-navy-blue);
+        font-size: 20pt;
+        font-weight: bold;
+        z-index: 1000;
+        pointer-events: none;
+      }
+
       #toolbar {
         text-align: center;
         padding: 15px;
@@ -63,7 +81,7 @@
         border-bottom: 1px solid var(--dark-teal);
       }
 
-      #toolbar button {        
+      #toolbar button {
         margin: 0 5px;
         padding: 5px 12px;
         background: var(--pbs-teal);
@@ -90,11 +108,11 @@
         height: calc(8.5in - 0.5in);
         margin: 0 auto;
       }
-      
+
       body.legal .calendar {
         page: legal;
         width: calc(14in - 0.5in);
-      }      
+      }
 
       #calendar-days {
         display: contents;
@@ -119,7 +137,7 @@
         position: absolute;
         left: 1rem;
       }
-      
+
       .schedule-url {
         position: absolute;
         right: 1rem;
@@ -151,17 +169,17 @@
         padding: 7px;
         overflow: hidden;
         font-family: Verdana, Tahoma, 'Trebuchet MS', Arial, sans-serif;
-        font-size: 7pt;        
+        font-size: 7pt;
         background: var(--lightest-blue);
       }
-      
+
       .day.odd-row {
         background: var(--lighter-blue);
-      }       
-      
+      }
+
       .day:nth-child(7n) {
         border-right: none;
-      } 
+      }
 
       .split-day {
         display: flex;
@@ -229,11 +247,11 @@
         font-weight: bold;
         color: var(--pbs-blue);
       }
-      
+
       dialog {
         min-width: 320px;
         max-width: 450px;
-        padding: 24px;
+        padding: 30px;
         border: none;
         border-radius: 8px;
         box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
@@ -244,13 +262,13 @@
       }
 
       #dialog-title {
-        margin: 0 0 12px;
+        margin: 3px 0 24px;
         font-size: 16pt;
         color: var(--pbs-navy-blue);
       }
 
       #dialog-message {
-        margin-bottom: 20px;
+        margin-bottom: 26px;
         white-space: pre-wrap;
         line-height: 1.4;
       }
@@ -296,7 +314,7 @@
       #dialog:has(#dialog-spinner:not([hidden])) {
         text-align: center;
       }
-      
+
       #toolbar button:active,
       #dialog-buttons button:active {
         transform: translateY(1px);
@@ -306,14 +324,14 @@
       #dialog-buttons button:disabled {
         opacity: 0.6;
         cursor: wait;
-      }      
+      }
 
       @keyframes spin {
         to {
           transform: rotate(360deg);
         }
-      }      
-      
+      }
+
       @media print {
         * {
           -webkit-print-color-adjust: exact;
@@ -324,7 +342,7 @@
           display: none;
         }
       }
-      
+
       @page letter {
         size: letter landscape;
         margin: 0.25in;
@@ -333,22 +351,31 @@
       @page legal {
         size: legal landscape;
         margin: 0.25in;
-      }      
-    </style>   
+      }
+    </style>
   </head>
   <body>
     <div id="toolbar">
       <button onclick="newCalendar()">New Calendar</button>
       <button onclick="saveCalendar()">Save Calendar</button>
-      <button id="page-size-button" onclick="togglePageSize()">Legal Size</button>
+      <button onclick="document.getElementById('pdf-file').click()">
+        Import PDF
+      </button>
+      <button id="page-size-button" onclick="togglePageSize()">
+        Legal Size
+      </button>
+      <input type="file" id="pdf-file" accept=".pdf,application/pdf" hidden />
     </div>
 
     <div class="calendar">
       <div class="month">
-        <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKoAAAAuCAYAAAC4V4JMAAABdmlDQ1BJQ0MgUHJvZmlsZQAAeJx1kTtLA0EUhb/ER0SjFiqIWKSIYmFAFMRSY5EmiEQFX012skmEJC67CRJsBRuLgIVo46vwH2gr2CoIgiKIWFv6aiSsd0wgIjrL7P04M+dy9yx4oxmVderHIZvL27FIODC/sBjwPeOjjS4aCcaVY01MT0f5d33c4tH1JqR7/X/vz9WSMB0FnibhUWXZeWGZhuha3tK8Jdyp0vGE8IHwoC0DCl9q3ajwk+ZUhd8027OxSfDqnoHUDzZ+sErbWeEB4WA2U1DVefSX+M3c3IzUHtm9OMSIECaAQYEVMuQJSc1JZn/7hr59U6yKR8nboogtjhRp8Q6KWpCuptSk6KY8GYo69995OsmR4Up3fxgaHl33tQ9821Auue7noeuWj6DuAc5zNf+q5DT2LnqppgX3oX0DTi9qmrEDZ5vQfW/F7fi3VCfbm0zCywm0LkDHNTQvVbKqnnN8B7Pr8ouuYHcP+uV++/IX8CtoApFcmyoAABMuSURBVHic7Z17nBXVkce/1d133gPzFoFBXdgghCj4yHM1GhcDJjEiICDG+IjEZJPVxJiYZM3TZBPjIjH4IUajLgJiFIOPJSuJmJA1H40YDI8MKG/l4QwMyAwzDN19av/oPvdehxm8d+YOMH7m9/n0p6e5faqqz6muU1WnTiOqugFwyBwBkAd8U0QeVlVXRMIs2mcNy0NVzwEeimXIRGYFJD6PE5HXVNUREdOD4vahB+ABQ7vYtn98lhzJkgmKgZO62DYvl4L04ejCA0Kyt6gecCyskiGyjobsLar2oFx96GF4RAOZjVXM9v5cQ8hOhmMpax9yhGwsaR/6cMzQp6h96BXoU9Q+9Ar0KWofegW8Yy1AH969UNVkICsi3cq69ClqH3KCWCmFaJZWwKQrZ/y7E99jsl106VPUHoCq2gGxMN21KBny7Sh1p4D2FP+YpysiAakcNwCbN28ucF1XamtrjYi0EeXs09t6QJiJbD2mqPFgdccH1p5emoVoeZbsc62HyZZmMTKyFl3kC+0G1ipKGt8OBz1tPDJSjEyQtnwexNdn+L5/PvB+EfknEakGJAgC9X2/XsNwk4G/ishz+fn5K2PlJpNl+B5RVFWVuNOO+zX1XLwM8fMqscVQ1ZOIlnrzgX3AehHZn3Zfrvi2V5T+wBCgmkh524AGYKeI7CMej+7WZ8RKr3H9RVUYhlep6uXAmEQi0Vmzk/C8s4EpAL7vvywiC1zXfVBEGq0/29lLlHNFTSsg+RgwkcwLSCD2X+L764Ef0266yDVU9RtAbcz3nSycEinAShG5z061ImLiv68FrgFGA4Vp7W4HvgG4qhqKiKrqjcCwDPla3g5wl4i8qqqeiASqWgpMBi4FzgQGdNCuQVXXAEuA+SKyq6vFOelKHgTBF4Mg+JbneYPia15Z+Urw8ooVsnHjRmlsbCTwfRKJBBWVlQwdNlTPPOssHT1mjOd53pnAmUEQ3KiqPxSRe9vTb8841Ozgx+cZcXsvjZYTHyeoan2WdNtjqhVco2kSVb0w/i1TmU3aeaSVsd3zb+iCbM/EbfPi80BVXdbunlBV22Led9m+svxV9W9d4Ksa9YGlMU1VN3VwT5h2tMebmho7N1sljc+DwzBcaglu377D/6877ggvOO98HTzgRK3sX6ZVZeVaU1GpJ1RWaU1FpVaVlWtl/zKtPXGgjv3YBTpr5p3hrl27rC5pEAS/U9UTO5Mr1xbVid/yOUTTTxuRBcoUAVAA3CoiCzVlnbPq0CyxN+abSaFLSPQ8b8XXgaoOAJ4FTgX8+Hfrr9qgqqNZYV/M19J8J1j5gtiC/xD4DytHGk97ttC09grUAPeoarWI/EgzdAPSxuLsMAwXua5bCwT3zPmle/cvZns7tr9BYVERBQUFFBcXo3r4DC4ihGFI3dq1/O3lFc4D99/vfOnLX9bPzbgudF13nDHmeVWdKCIr28uVs4S/pqaiq4AJRJ2XT/QyZHIIkZI+IyK3aWSpj4aP62YhY/LQaKr3gEWklDRBSlnS0dHU3iW+QKOqTiNSUvuCeaRekPawWQDLz8TtblPV8zIxBBq5CaGqjjbGLHVdt7ahviGYMmmy961bbpGmpv1UVVdTWFiIqhIEAWEYHnYEQYCqUlhURFVVNW/t3cstN98s06de7u3ZsydwHOcUY8xSVR0Z80vqZ04UNSYYqurJwM/jzsjGClprsR24MlaCo5LS6SLcWLZvAx8mpaQ9Ceu/nwbcRarPsh3D9Bfpp/HYddrP9ndVHWSM+R/Hcco2btwYXnLxxd5zy5ZRXVOD53kEYWT8XNfF9bzUEV+LpN4hEUFVyS8ooKq6mqXP/C+XfvoSb9u2bYHjOFXGmN+panXM17FC5wJOPHD3Af1I1YFmApt7U2C6iNTH9I7njEGLqlYCXydl0XoaQmQJvwVUcfgUnw1cIrnfD5wZuxKdGRYBxBgz13GcgQ0NDcGV069wN27YQGVlJYHv4zgOGoY0NzXR2NhI4+7dqSO+PnToUFJZ9+3bR+OePbz11luEYUhVVRXr6+q4cvoVXmNjY+A4zpAwDOfGOiWQmw72ROSgqn4FuIBUYXWmCOP7bxGRP1kXIgdy9ST2A18gclWyfd7uIA8YztsLwrtab2st8oXASx3RSfNLv+Q4zseMwb/hS19OvLZ+PZVVVQRBgAB7GxuprKrirA98gKFDh1JUXJQkp6o4jsMflv6eja+9SmFREVddey39+/dj29ZtLHn6aQDKKypYu3o1X73xRu/BuXMD13XHBUFwrYj8WlXdbkf9sTDvVdVWVQ00FWlngiA+L47pdDjg2rNRv42+M6Fp6e1U1X3x9ZGe1/bVLPt8morY/xT/FnTY8sgypEf0pgs00vk+kt7Haf0i8VHu+369qob33XtvWFHaT4cPG6bDTj5FTx5cq0MGDtLv3vod3bRp8xGZPfnEkzqgqlpPrK7Rxx5bpKqqbW1t+sGz369DBg7SYSefosOHDtOKfv113kPzQlUNfd/fqar9VFW6NfVrlIpKAA8QWRfI/A23fuwW4GqNBvB4nu4h9WwDiPaMHavdDtY3bSMVKHXVn7d51/btXRHRMAyv9Tyvev/+/WbO7Lud0n79MKEShiGu53HfAw/wvR98n1NOORlV7TCACoKAf71wLKeOGIHv+8yZPZuWlhby8vK4bMoUDhw4gOu6hGFISUkJd82a5TQ3HzCe5w0Iw3C6iGh3FNWL/cjvA2cTTYGZBlB2D1MATBWRvcSJ827IczTR2R4s628HpFJPnS5rdgF2cWA5kZs1isjPfIxUsJUtrIFpL2OoUQ77akAXzJ/vbN2yhYKCAkBpbWnhpz/7GWMvHIvv+xhjEJEoeIoPEcHzokmysKCAKVOn4jgO6+rq+PPyP6OqTLrsMmpqajh06FB0X2EhmzZs4JGFCwVQY8znVNXpjqI2quoI4BYyzwUmOyG+/yYReVEjv7TH1/VziI4saUgqwLGppPz4Ohd5YOuP7gcmi8gyEdkgIi8BVwC7SFUudY9R5Juq7/tnu647MggCXfToY05+QaTTTU1NnHv++UycNJEgCEgkEjgdqJL9N6usk6ZcxuDBtRxqa2Pe3IcAobZ2MOM/8Qmam5pwHAdjDHn5+Sx69FE3DENxXfd04KyuKKodoErg12S/2c4GT4+IyF3aO4KnI8FaV5fo2f4GLCTKgCwEVgEHc8DHWtMVIlKvqonY9fLiyqRX0u7rLgTAGHOeiLB27Vrz6vr1b8uTXjJhAqra4aAbE4mwZs0axo29kEsvmcDmTZupqqzkok99EhCef/7/+Psrr6CqXPGZz1BYVIQxJsqzFhZSV1fH+nXrQ8dx3CAILuqKolrr8B3gQ/HfmdKxfuk64LrYL+1NlrQ9rJUTIsUcLSJnisg0EbkuPp8O3AbQzRfSWso9msoz2yITAd5sd18ucBrA2jVraWlpSVq8oqIiRowciYggHVhSjVel7pr1c/76wgs8u3Qp9/7qV6gql0+fTllFOU379zN/3jxEhNFjRvORc86hubkZx3FwXZcDzc2sW7cOAGPMh7oz9dfQtU4xwFUi0kTklx6vSf13grWkhwCrmGviSNnVKMJ3AURkfw75HlamF1/7ueQR0x0KsGXLZkdVk4l6z/NiX/XIGHPGGADyCwoYc8YZiAinnjqccz/6UVSV3y9dys6dOwGYNm0aQRDY58EYw+vbtjnxde3R3jNlK4DGH2W+PQH7LNfEdQkJjZYaVURCEQms361pWzKOd2hciqiqjuM45QA73tgeJfVjZfWDgNbW1k5puG406X7hi19kwW9+w28WLWLyZZMJwxAR4atfu4n+/fuzft067pnzS0SET336Yj744Q9zoLkZEcER4Y3tbwAgImXdSVRnG0BBytn/tqouEpHVehS+XdUDsM++UETmq2pCRDq1aL101kiISALgkO8nfVHHcWhtaWFdXR2jR5+OGgNHiMnHjR8HRH6r67qsXr2aVX9fRc0JJ3DOuedSXlFBQ0MDy5cvZ8CJJybdBhFh39599u9EVyyqddbvIao8yuZzOTaF4gGzu8D7eIH1rX9i/cVjLE9PwCdya8jLy0sOsJ36n1y8OHIFOPLg23yqxgHWk4uf4Oorr+TNXbu49Xvf5YYbb2DHjp3MuPZzPLNkCUXFxRhjMKqUl5dZnn53FHUZcDfZ5+9sdHyuql5zFMr4cg0bfdcRRfQ5qdY/XhBP+yIiJgzDfQADBw5Umyc1xlBaWsofn3uO3z7+WzzPI4yrpbSD0j6bU1VVjDEUFxdTVVWF67rs3buXIAhwXZfKykry8/NJ94UHDa5VAFXd1x0ftZSocr2J1Lpzxv1BNOA/VdUa0qpkegHsS7k2ntJ7i9zZwAaBrwIMHTZMrY8KJFNIX7/pJp5+6im8uEoqvULqMIKeh+M4tLS2cuDAAQ4ePEhJSUkyx3owzefVuD6gdkhSUbd1p5OL4sj9DuJNbVm0tb5qFXB7nGbpNQFHjD3xubfJnQ1WAYwaNYqiouJkflRVk0ue1183g+tnfJ4lS5awf39T8vd0hGFIW1sbK15awZKnn2ZwbS1XXXMNQ4acRH19PXPunh0VuMSKHoYhxSUljBgxAgARWdYdRQ1j/2wWsJXsldW6AJ/VDAt4jzP0xgApUyhAIpH4s6rynlOHO+8Z/h5aW1uTq01WWQsLC3ly8WKmTJzE888/D6QS/va8fv16LjjvfC76+Mc57bTTeXHFS/zwR7fxtZtu4tyP/AtPLn6C4tg3dRyH1tZWRo0axfDhw11jTAg8293tzBrnCL9L9tN/OmZrav/Ru9lC9QrERkOAl8Iw/EfC82Ti5Enm4MGDb1sqVVVUlbKyMkpLS+ls5m9ra2Prli0AlFeUU1JSgjGG7W+8wd49e962dcVxHNra2pg4eVLoOI4aY15OJBIru+1fxdVT84iWDq2VzBQuUfHGe4Gb46Dk3ejz9Ua4cT74PkCmTJ1qhpx0EgcPHjzMFw3DMIrUjelwC4qqkp+fH+VgfT+5JSUvLw8vkUhaXomt6dChw5g4aZISLQjdLyImF0rhxAr2jS62t9Xm31bVfwZMLwqs3s0IVVVc130wCIL6srIy54avfMU0NTXheod7aKpKcXExruuSl5eH67okEglc16WkpCQZ9efn5yeDL7ska+G5Ls3Nzdz4ta+a0tJSNwiCHa7rLlBVyUVlehgn7f+gqkuAi8huMcBmAAqJ9qyP71PUY484TeWKyF5VvRW457NXfTZY9uyzzpKnnqKquhrfj9Y4VJVEIsGLL7xIGIT4vo/jOqiJ/NhNmzYhIiQSCbZu3cqyZ5dhjKGxsRHP85LtG+rrmTBxItOmTTOA53neLSLSpKpuzrZQxD7NN4m2NtioPlN/07oM41R1iog80ktXrN5VsAGuiPwqDMNJjuOMvfPns4JtW7Z6dXX/oLy8PFmLWlhYyC/unEUQHl534zgOhYWFFBcXs/yPf+T3zzwDRLWn1sI2NjZyxllnccfMmQHghWH4tOd5D1k9yInlsr6liKwCHiS1cpMVGSLlnqmqZUS51b7A6thDVVUcx7naGLO9oqLCm7fw4XDEyJHs3r2bRCKRTNAXFhVSWlp62FFcXGwJkUgkkv/ueR6e59HQ0MBpp5/OQw8vCMrK+nvGmC2u616jaTtkcznFWsX6HlFxb7ZFvDa9NRC4Lc6t9rkAxxg2xy0i2x3HucgY0zho0ED30d8+Hnx8/Hjq6+vxfT+ZuLdBVfvDIj26P3ToELsbGvjkxZ/i0ccf90+oqfGMMTscx7lIRBrS+Edf3uji8bacaUzQFZHtwMyY9qEu0GwjqlU9o4PcqmZJL/3o7KUJs6DR6fN3AV3l29lMZbKgkQm9JOx2ahFZFe1GNVurKiu9eQvmB/95++1aXl7B7t27aW1tTW1HsXv67ZG2etXS0sLu3buprKriZ3feaR6cOzcoK+ufMMZsdBznAhGpi/kl+9gj+/8ozPq1hR38Zr9uMRO4nsM/2JUNHlXVMUAzKcuaR9e3JnfWrjxLmvbeki7K0Z5vprztff07+b20i/TKM7k5zV/9u6qeE4bhPa7rjp/x+RlMuHRC8PD8Bc4Tixc7r736alQCqIo4Do4IRjUqShFJFl1fMmGCmXr5NFNZWekBThiGi13X/YJEH3A7LD4RjbbyZuML2q0kC0XkL9ruq3D2WlXHEWUAstn0Z2GI9hvNiUsB7eeCTiXaT9+V/xDtJ3EnvK1YW1VvBgZnQdM+/3IReaz987+jQKl6z38n+l8Ts+X7soj8d1o/2/NUoq+2ZNrflu9WEZnZvl+OIH9SiVT1+iAIbvU8byBAaAyvrFwZrlm9htdff13e3LVLmpr2U1rajwEDBmjtkCH6vveNYvSYMa7NxQZBsNXzvB+IyP0xzaP38ZG+IOjdjXivlsR/lwdB8G++77+gmX9fwPd9/y9BEFyvqv3a0+wIop189CEDHPHLytr1Lyqno7OvK3ebVhrNrsqZ9Xfoc8S3wy9x55peRg3bTdGq+gHf98eq6mmO4wwDqkUkoaqHiL7RugFYlUgklkq0e7ZDOh3h/wFZ2IA7smlSPQAAAABJRU5ErkJggg==" alt="KLRN logo">        
+        <img
+          src="data:image/png;base64,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"
+          alt="KLRN logo"
+        />
         Prime Time Schedule -&nbsp;
-        <span contenteditable="true">September 2026</span>
-        <span class="schedule-url">www.klrn.org/schedule</span>        
+        <span contenteditable="true"></span>
+        <span class="schedule-url">www.klrn.org/schedule</span>
       </div>
       <div class="day-header">Sunday</div>
       <div class="day-header">Monday</div>
@@ -358,13 +385,13 @@
       <div class="day-header">Friday</div>
       <div class="day-header">Saturday</div>
       <div id="calendar-days"></div>
-    </div>    
-  
+    </div>
+
     <dialog id="dialog">
       <h2 id="dialog-title">New Calendar</h2>
       <div id="dialog-spinner" hidden=""></div>
-      <div id="dialog-message">Year:</div>      
-      <input id="dialog-input">
+      <div id="dialog-message">Year:</div>
+      <input id="dialog-input" />
       <div id="dialog-buttons">
         <button id="dialog-ok">OK</button>
         <button id="dialog-cancel">Cancel</button>
@@ -375,39 +402,41 @@
       // ======================================================
       // Configuration
       // ======================================================
+
       const APP = {
         templateUrl: 'http://localhost/dev/klrn-calendar/template.php',
-        fileHandle: null,        
+        pdfJsSrc: 'http://localhost/dev/klrn-calendar/lib/pdf.min.js',
+        pdfJsWorkerSrc:
+          'http://localhost/dev/klrn-calendar/lib/pdf.worker.min.js',
+        pdfImporting: false,
+        pdfJsPromise: null,
+        fileHandle: null,
         busyTimer: null,
-        
+
         shouldStartNewCalendar() {
           const value = sessionStorage.getItem('pending-new-calendar');
           sessionStorage.removeItem('pending-new-calendar');
           return value === 'true';
-        },        
-                
+        },
+
         async promptForNewCalendar() {
           const current = new Date();
 
           let month = await DIALOG.prompt(
             'New Calendar',
             'Month (1-12):',
-            current.getMonth() + 1
+            current.getMonth() + 1,
           );
 
-          if (month === null) {
-            return;
-          }
+          if (month === null) return;
 
           let year = await DIALOG.prompt(
             'New Calendar',
             'Year:',
-            current.getFullYear()
+            current.getFullYear(),
           );
 
-          if (year === null) {
-            return;
-          }
+          if (year === null) return;
 
           month = parseInt(month, 10);
           year = parseInt(year, 10);
@@ -415,7 +444,7 @@
           if (isNaN(month) || month < 1 || month > 12) {
             await DIALOG.alert(
               'Invalid month',
-              'Month must be between 1 and 12.'
+              'Month must be between 1 and 12.',
             );
             return;
           }
@@ -423,28 +452,27 @@
           if (isNaN(year) || year < 2026) {
             await DIALOG.alert(
               'Invalid year',
-              'Year must be a four-digit number above 2025.'
+              'Year must be a four-digit number above 2025.',
             );
             return;
           }
 
           generateCalendar(month - 1, year);
         },
-        
-        async checkForUpdates() {
-          if (!this.templateUrl) {
-            return false;
-          }
-  
-          const html = await this.downloadTemplate();
 
-          if (!html) {
-            return false;
-          }
+        async checkForUpdates() {
+          if (!this.templateUrl) return false;
+          
+          const html = await this.downloadTemplate();
+          if (!html) return false;
 
           const doc = new DOMParser().parseFromString(html, 'text/html');
-          const serverVersion = doc.querySelector('meta[name="app-version"]')?.content;
-          const currentVersion = document.querySelector('meta[name="app-version"]')?.content;
+          const serverVersion = doc.querySelector(
+            'meta[name="app-version"]',
+          )?.content;
+          const currentVersion = document.querySelector(
+            'meta[name="app-version"]',
+          )?.content;
 
           if (
             !serverVersion ||
@@ -455,52 +483,47 @@
           }
 
           return await DIALOG.confirmUpdate(html, serverVersion);
-        },        
-        
+        },
+
         async downloadTemplate() {
           DIALOG.showBusy('Checking for updates...');
-          
+
           try {
             const response = await fetch(this.templateUrl);
             if (!response.ok) {
               throw new Error(`Server returned ${response.status}`);
             }
             return await response.text();
-          }
-          catch (e) {
+            
+          } catch (e) {
             console.log('Could not check for updates:', e);
             return null;
-          }
-          finally {
+            
+          } finally {
             DIALOG.hideBusy();
           }
-        },       
-        
+        },
+
         compareVersions(v1, v2) {
           const a = v1.split('.').map(Number);
           const b = v2.split('.').map(Number);
           const length = Math.max(a.length, b.length);
 
           for (let i = 0; i < length; i++) {
-              const x = a[i] ?? 0;
-              const y = b[i] ?? 0;
+            const x = a[i] ?? 0;
+            const y = b[i] ?? 0;
 
-              if (x > y) {
-                  return 1;
-              }
-
-              if (x < y) {
-                  return -1;
-              }
+            if (x > y) return 1;
+            if (x < y) return -1;
           }
           return 0;
-        }     
+        },
       };
-      
+
       // ======================================================
       // Dialog
       // ======================================================
-      
+
       const DIALOG = {
         dialog: document.getElementById('dialog'),
         title: document.getElementById('dialog-title'),
@@ -521,7 +544,7 @@
           showCancel = false,
           defaultValue = '',
           onOK = null,
-          onCancel = null
+          onCancel = null,
         } = {}) {
           this.title.textContent = title;
           this.message.textContent = message;
@@ -547,36 +570,38 @@
             this.input.select();
           }
         },
-        
+
         confirmUpdate(html, version) {
           return new Promise((resolve) => {
             this.show({
               title: 'Update Available',
-              message: `Version ${version} is available. Update now?`,
+              message: APP.pdfImporting
+                ? `Version ${version} is available, which will clear the current calendar. Update now?`
+                : `Version ${version} is available. Update now?`,
               okText: 'Update',
               showCancel: true,
-
+              
               onOK: async () => {
                 this.dialog.close();
                 sessionStorage.setItem('pending-html-update', html);
                 sessionStorage.setItem('pending-new-calendar', 'true');
                 window.location.reload();
               },
-
+              
               onCancel: () => {
                 this.dialog.close();
                 resolve(false);
-              }
+              },
             });
           });
-        },        
+        },
 
         confirm(title, message) {
           return new Promise((resolve) => {
             this.show({
               title,
               message,
-              showCancel: true
+              showCancel: true,
             });
 
             this.ok.onclick = () => {
@@ -595,7 +620,7 @@
           return new Promise((resolve) => {
             this.show({
               title,
-              message
+              message,
             });
 
             this.ok.onclick = () => {
@@ -612,7 +637,7 @@
               message,
               input: true,
               showCancel: true,
-              defaultValue
+              defaultValue,
             });
 
             this.ok.onclick = () => {
@@ -639,27 +664,45 @@
             message,
             spinner: true,
             showOK: false,
-            showCancel: false
+            showCancel: false,
           });
         },
 
         hideBusy() {
           this.dialog.close();
-        }
-      };   
-      
+        },
+      };
+
       // ======================================================
       // Initialization
-      // ======================================================      
+      // ======================================================
 
       initialize();
-      
-      function initialize() {
+
+      async function initialize() {
         attachContentListeners();
         formatAllDays();
         checkAllDays();
-        if (APP.shouldStartNewCalendar()) {
+        initializePdfImport();
+
+        const shouldStartNewCalendar = APP.shouldStartNewCalendar();
+        const pendingPdf = await getPendingPdf();
+
+        if (pendingPdf) {
+          await deletePendingPdf();
+
+          const file = new File([pendingPdf.blob], pendingPdf.name, {
+            type: 'application/pdf',
+          });
+
+          await importPdf(file, true);
+          
+        } else if (shouldStartNewCalendar) {
           APP.promptForNewCalendar();
+          
+        } else if (!getCalendarMonth()) {
+          const today = new Date();
+          setMonthTitle(today.getMonth(), today.getFullYear());
         }
       }
 
@@ -675,23 +718,501 @@
           });
         });
       }
-     
+
+      // ======================================================
+      // PDF import
+      // ======================================================
+
+      function initializePdfImport() {
+        const fileInput = document.getElementById('pdf-file');
+        let dragDepth = 0;
+
+        fileInput.addEventListener('change', async () => {
+          const file = fileInput.files[0];
+          if (file) await importPdf(file);          
+          fileInput.value = ''; // Allow selecting same PDF again.
+        });
+
+        document.addEventListener('dragenter', (event) => {
+          if (!event.dataTransfer?.types.includes('Files')) {
+            return;
+          }
+
+          event.preventDefault();
+          dragDepth++;
+          document.body.classList.add('drag-over');
+        });
+
+        document.addEventListener('dragover', (event) => {
+          if (!event.dataTransfer?.types.includes('Files')) {
+            return;
+          }
+
+          event.preventDefault();
+          event.dataTransfer.dropEffect = 'copy';
+        });
+
+        document.addEventListener('dragleave', (event) => {
+          if (!event.dataTransfer?.types.includes('Files')) {
+            return;
+          }
+
+          dragDepth--;
+
+          if (dragDepth <= 0) {
+            dragDepth = 0;
+            document.body.classList.remove('drag-over');
+          }
+        });
+
+        document.addEventListener('drop', async (event) => {
+          event.preventDefault();
+          dragDepth = 0;
+          document.body.classList.remove('drag-over');
+          const file = event.dataTransfer?.files[0];
+          if (file) await importPdf(file);
+        });
+      }
+
+      async function importPdf(file, skipUpdateCheck = false) {
+        if (APP.pdfImporting) return;
+
+        const isPdf =
+          file.type === 'application/pdf' ||
+          file.name.toLowerCase().endsWith('.pdf');
+
+        if (!isPdf) {
+          await DIALOG.alert('Invalid File', 'Please select a PDF file.');
+          return;
+        }
+
+        APP.pdfImporting = true;
+
+        try {
+          await loadPdfJs();          
+          const schedule = await extractPdfSchedule(file);
+          const importInfo = validatePdfSchedule(schedule);
+          
+          if (!skipUpdateCheck) {
+            await savePendingPdf(file);
+            if (await APP.checkForUpdates()) return;
+            await deletePendingPdf();
+          }          
+          
+          const confirmed = await confirmPdfImport(importInfo);          
+          if (!confirmed) return;
+          
+          generateCalendar(importInfo.month - 1, importInfo.year);
+          populateCalendar(schedule);
+          
+        } catch (error) {
+          console.error('PDF import failed:', error);
+          await DIALOG.alert('PDF Import Failed', error.message);
+          
+        } finally {
+          APP.pdfImporting = false;
+        }
+      }
+
+      async function confirmPdfImport(importInfo) {
+        const current = getCalendarMonth();
+        const importedMonth = `${importInfo.monthName} ${importInfo.year}`;
+        let message;
+
+        if (!current) {
+          message =
+            `Create a ${importedMonth} calendar with ` +
+            `${importInfo.programCount} imported programs?`;
+            
+        } else {
+          const sameMonth =
+            current.month === importInfo.month &&
+            current.year === importInfo.year;
+
+          if (sameMonth) {
+            message =
+              `Replace the current ${importedMonth} calendar with ` +
+              `${importInfo.programCount} imported programs?\n\n` +
+              'All existing calendar entries will be cleared.';
+              
+          } else {
+            const currentMonth = new Date(
+              current.year,
+              current.month - 1,
+              1,
+            ).toLocaleString('en-US', {
+              month: 'long',
+              year: 'numeric',
+            });
+
+            message =
+              `Import ${importedMonth} (${importInfo.programCount} programs)?\n\n` +
+              `This will replace your current ${currentMonth} calendar ` +
+              'and clear all existing entries.';
+          }
+        }
+
+        return DIALOG.confirm('Import PDF Schedule', message);
+      }
+
+      function loadPdfJs() {
+        if (APP.pdfJsPromise) return APP.pdfJsPromise;
+
+        APP.pdfJsPromise = new Promise((resolve, reject) => {
+          const script = document.createElement('script');
+          script.src = APP.pdfJsSrc;
+          script.onload = () => {
+            pdfjsLib.GlobalWorkerOptions.workerSrc = APP.pdfJsWorkerSrc;
+            resolve();
+          };
+
+          script.onerror = () => {
+            script.remove();
+            reject(
+              new Error(
+                'Unable to load PDF.js. Check your internet connection.',
+              ),
+            );
+          };
+
+          document.head.appendChild(script);          
+        }).catch((error) => {
+          APP.pdfJsPromise = null;
+          throw error;
+        });
+
+        return APP.pdfJsPromise;
+      }
+
+      async function extractPdfSchedule(file) {
+        const buffer = await file.arrayBuffer();
+        const pdf = await pdfjsLib.getDocument({ data: buffer }).promise;
+        const schedule = [];
+        let foundChannel = false;
+        let finished = false;
+
+        for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber++) {
+          const page = await pdf.getPage(pageNumber);
+          const content = await page.getTextContent();
+          const items = content.items
+            .filter((item) => item.str?.trim())
+            .map((item) => ({
+              text: item.str.trim(),
+              x: item.transform[4],
+              y: item.transform[5],
+            }));
+
+          const channels = items.filter((item) =>
+            /^KLRN\d+\.\d+$/.test(item.text),
+          );
+
+          function findField(x, y, tolerance = 2) {
+            return (
+              items.find(
+                (item) =>
+                  Math.abs(item.x - x) <= tolerance &&
+                  Math.abs(item.y - y) <= tolerance,
+              )?.text || ''
+            );
+          }
+
+          for (const channelItem of channels) {
+            const channel = channelItem.text.replace('KLRN', '');
+
+            if (channel !== '9.1') {
+              if (foundChannel) {
+                finished = true;
+                break;
+              }
+
+              continue;
+            }
+
+            foundChannel = true;
+
+            const x = channelItem.x;
+            const date = findField(x, 70);
+            const startTime = findField(x, 139);
+            let programTitle = findField(x, 194);
+            const continuation = findField(x + 9, 194);
+
+            if (continuation) {
+              programTitle += ' ' + continuation;
+            }
+
+            // Episode title starts after the program title.
+            const episodeX = x + (continuation ? 21 : 12);
+            let episodeTitle = findField(episodeX, 194);
+
+            // Include a wrapped second line, if present.
+            const episodeContinuation = findField(episodeX + 9, 194);
+
+            if (episodeContinuation) {
+              episodeTitle += ' ' + episodeContinuation;
+            }
+
+            let episodeNumber = '';
+            const numberMatch = programTitle.match(/\s+#(\d+)$/);
+
+            if (numberMatch) {
+              episodeNumber = numberMatch[1];
+              programTitle = programTitle.replace(/\s+#\d+$/, '').trim();
+            }
+
+            if (!date || !startTime || !programTitle) {
+              console.warn('Incomplete PDF record:', {
+                pageNumber,
+                x,
+                date,
+                startTime,
+                programTitle,
+              });
+
+              continue;
+            }
+
+            schedule.push({
+              channel,
+              date: normalizeDate(date),
+              startTime,
+              programTitle,
+              episodeNumber,
+              episodeTitle,
+            });
+          }
+
+          if (finished) break;
+        }
+
+        if (!foundChannel) {
+          throw new Error('No channel 9.1 records were found.');
+        }
+
+        return sortSchedule(schedule);
+      }
+
+      function normalizeDate(date) {
+        const [month, day, year] = date.split('/');
+        return `${year}-${month}-${day}`;
+      }
+
+      function sortSchedule(schedule) {
+        return schedule.sort((a, b) => {
+          const dateComparison = a.date.localeCompare(b.date);
+
+          if (dateComparison !== 0) {
+            return dateComparison;
+          }
+
+          return a.startTime.localeCompare(b.startTime);
+        });
+      }
+
+      function validatePdfSchedule(schedule) {
+        if (!schedule.length) {
+          throw new Error('No schedule records were found in the PDF.');
+        }
+
+        const months = new Set();
+
+        for (const record of schedule) {
+          const { channel, date, startTime, programTitle } = record;
+
+          if (
+            channel !== '9.1' ||
+            !/^\d{4}-\d{2}-\d{2}$/.test(date) ||
+            !/^\d{2}:\d{2}:\d{2}:\d{2}$/.test(startTime) ||
+            !programTitle?.trim()
+          ) {
+            throw new Error('The PDF contains an invalid schedule record.');
+          }
+
+          const [year, month, day] = date.split('-').map(Number);
+          const parsedDate = new Date(Date.UTC(year, month - 1, day));
+
+          if (
+            parsedDate.getUTCFullYear() !== year ||
+            parsedDate.getUTCMonth() !== month - 1 ||
+            parsedDate.getUTCDate() !== day
+          ) {
+            throw new Error(`Invalid schedule date: ${date}`);
+          }
+
+          months.add(date.slice(0, 7));
+        }
+
+        if (months.size !== 1) {
+          throw new Error(
+            'The PDF contains records from multiple months. Please import a single-month schedule.',
+          );
+        }
+
+        const [year, month] = [...months][0].split('-').map(Number);
+
+        return {
+          year,
+          month,
+          monthName: new Date(year, month - 1, 1).toLocaleString('en-US', {
+            month: 'long',
+          }),
+          programCount: schedule.length,
+        };
+      }
+
+      // ======================================================
+      // PDF helpers for IndexedDB
+      // ======================================================
+
+      function openPendingPdfDb() {
+        return new Promise((resolve, reject) => {
+          const request = indexedDB.open('klrn-calendar', 1);
+
+          request.onupgradeneeded = () => {
+            request.result.createObjectStore('pending');
+          };
+
+          request.onsuccess = () => resolve(request.result);
+          request.onerror = () => reject(request.error);
+        });
+      }
+
+      async function savePendingPdf(file) {
+        const db = await openPendingPdfDb();
+
+        await new Promise((resolve, reject) => {
+          const transaction = db.transaction('pending', 'readwrite');
+
+          transaction.objectStore('pending').put(
+            {
+              blob: file,
+              name: file.name,
+            },
+            'pdf',
+          );
+
+          transaction.oncomplete = resolve;
+          transaction.onerror = () => reject(transaction.error);
+        });
+
+        db.close();
+      }
+
+      async function getPendingPdf() {
+        const db = await openPendingPdfDb();
+
+        const result = await new Promise((resolve, reject) => {
+          const transaction = db.transaction('pending', 'readonly');
+          const request = transaction.objectStore('pending').get('pdf');
+
+          request.onsuccess = () => resolve(request.result || null);
+          request.onerror = () => reject(request.error);
+        });
+
+        db.close();
+        return result;
+      }
+
+      async function deletePendingPdf() {
+        const db = await openPendingPdfDb();
+
+        await new Promise((resolve, reject) => {
+          const transaction = db.transaction('pending', 'readwrite');
+          transaction.objectStore('pending').delete('pdf');
+          transaction.oncomplete = resolve;
+          transaction.onerror = () => reject(transaction.error);
+        });
+
+        db.close();
+      }
+
+      // ======================================================
+      // Populate calendar
+      // ======================================================
+
+      function formatImportedTime(startTime) {
+        const [hours, minutes] = startTime.split(':').map(Number);
+        const hour = hours % 12 || 12;
+        const suffix = hours < 12 ? 'a.m.' : 'p.m.';
+        const time =
+          minutes === 0
+            ? `${hour}`
+            : `${hour}:${String(minutes).padStart(2, '0')}`;
+
+        return `${time} ${suffix}`;
+      }
+
+      function formatImportedProgram(record) {
+        let title = record.programTitle;
+
+        if (record.episodeTitle) {
+          title += ` | ${record.episodeTitle}`;
+        } else if (record.episodeNumber && record.episodeNumber !== '0') {
+          title += ` | ep. ${record.episodeNumber}`;
+        }
+
+        return `${formatImportedTime(record.startTime)} ${title}`;
+      }
+
+      function populateCalendar(schedule) {
+        const calendar = document.getElementById('calendar-days');
+        const dayContents = new Map();
+
+        // Match each day number to its editable shows container.
+        calendar.querySelectorAll('.day-number').forEach((numberEl) => {
+          const day = Number(numberEl.textContent.trim());
+          const container =
+            numberEl.closest('.half-day') || numberEl.closest('.day');
+          const content = container.querySelector('.content.shows');
+
+          if (content) {
+            dayContents.set(day, content);
+          }
+        });
+
+        // Group imported programs by calendar day.
+        const programsByDay = new Map();
+
+        for (const record of schedule) {
+          const day = Number(record.date.slice(8, 10));
+
+          if (!programsByDay.has(day)) {
+            programsByDay.set(day, []);
+          }
+
+          programsByDay.get(day).push(formatImportedProgram(record));
+        }
+
+        // Populate the appropriate editable containers.
+        for (const [day, programs] of programsByDay) {
+          const content = dayContents.get(day);
+
+          if (!content) {
+            throw new Error(`Calendar day ${day} was not found.`);
+          }
+
+          content.textContent = programs.join('\n');
+        }
+
+        // Apply the calendar's existing formatting and overflow checks.
+        formatAllDays();
+        checkAllDays();
+      }
+
       // ======================================================
       // Calendar
-      // ====================================================== 
+      // ======================================================
 
       async function newCalendar() {
-        if (!(await DIALOG.confirm(
-          'New Calendar',
-          'This will clear the current calendar. Continue?'
-        ))) {
+        if (
+          !(await DIALOG.confirm(
+            'New Calendar',
+            'This will clear the current calendar. Continue?',
+          ))
+        ) {
           return;
         }
 
-        if (await APP.checkForUpdates()) {
-          return;
-        }
-
+        if (await APP.checkForUpdates()) return;
         await APP.promptForNewCalendar();
       }
 
@@ -707,10 +1228,10 @@
                 {
                   description: 'HTML Files',
                   accept: {
-                    'text/html': ['.html']
-                  }
-                }
-              ]
+                    'text/html': ['.html'],
+                  },
+                },
+              ],
             });
           }
           const writable = await APP.fileHandle.createWritable();
@@ -734,23 +1255,54 @@
           'September',
           'October',
           'November',
-          'December'
+          'December',
         ];
 
         document.querySelector('.month span').textContent =
           `${monthNames[month]} ${year}`;
       }
 
+      function getCalendarMonth() {
+        const calendar = document.getElementById('calendar-days');
+        const { month, year } = calendar.dataset;
+
+        if (month && year) {
+          return {
+            month: Number(month),
+            year: Number(year),
+          };
+        }
+
+        // Fallback for calendars saved before data attributes existed.
+        const heading = document
+          .querySelector('.month span')
+          ?.textContent.trim();
+
+        if (!heading) return null;
+        
+        const parsed = new Date(`${heading} 1`);
+        if (isNaN(parsed.getTime())) return null;
+
+        return {
+          month: parsed.getMonth() + 1,
+          year: parsed.getFullYear(),
+        };
+      }
+
       function generateCalendar(month, year) {
-        setMonthTitle(month, year);
         const firstWeekday = new Date(year, month, 1).getDay();
         const daysInMonth = new Date(year, month + 1, 0).getDate();
         const cells = new Array(42).fill(null);
+        const calendar = document.querySelector('#calendar-days');
+
+        setMonthTitle(month, year);
+        calendar.dataset.month = month + 1;
+        calendar.dataset.year = year;
 
         for (let day = 1; day <= daysInMonth; day++) {
           cells[firstWeekday + day - 1] = {
             day,
-            overflowDay: null
+            overflowDay: null,
           };
         }
 
@@ -763,7 +1315,7 @@
             if (!cells[row5]) {
               cells[row5] = {
                 day: null,
-                overflowDay: cells[row6].day
+                overflowDay: cells[row6].day,
               };
             } else {
               cells[row5].overflowDay = cells[row6].day;
@@ -811,41 +1363,53 @@
           }
         }
 
-        document.querySelector('#calendar-days').innerHTML = html;
+        calendar.innerHTML = html;
         attachContentListeners();
         formatAllDays();
         checkAllDays();
       }
-      
+
       // ======================================================
       // Formatting
-      // ======================================================      
-      
+      // ======================================================
+
+      function escapeHtml(text) {
+        return text.replace(
+          /[&<>"']/g,
+          (char) =>
+            ({
+              '&': '&amp;',
+              '<': '&lt;',
+              '>': '&gt;',
+              '"': '&quot;',
+              "'": '&#39;',
+            })[char],
+        );
+      }
+
       function formatDay(el) {
         const lines = el.innerText.split('\n').map((line) => line.trim());
         let html = '';
 
         for (const line of lines) {
-          if (!line) {
-            continue;
-          }
+          if (!line) continue;
 
           const match = line.match(
-            /^(\d{1,2}(?::\d{2})?)\s*([ap])\s*\.?\s*m\s*\.?\s*(.*)$/i
+            /^(\d{1,2}(?::\d{2})?)\s*([ap])\s*\.?\s*m\s*\.?\s*(.*)$/i,
           );
 
           if (match) {
             const normalizedTime = `${match[1]} ${match[2].toLowerCase()}.m.`;
-            html += `<div class="show-entry">`;
+            html += '<div class="show-entry">';
             html += `<span class="time">${normalizedTime}</span> `;
-            html += `${match[3]}</div>`;
+            html += `${escapeHtml(match[3])}</div>`;
           } else {
-            html += `<div>${line}</div>`;
+            html += `<div>${escapeHtml(line)}</div>`;
           }
         }
 
         el.innerHTML = html;
-      }    
+      }
 
       function formatAllDays() {
         document.querySelectorAll('.content').forEach((el) => {
@@ -866,23 +1430,20 @@
             content.closest('.half-day') || content.closest('.day');
           container.classList.toggle(
             'overflow',
-            content.scrollHeight > content.clientHeight
+            content.scrollHeight > content.clientHeight,
           );
         }
-      } 
+      }
 
       function togglePageSize() {
         const button = document.getElementById('page-size-button');
         const legal = document.body.classList.toggle('legal');
 
-        button.textContent = legal
-          ? 'Letter Size'
-          : 'Legal Size';
+        button.textContent = legal ? 'Letter Size' : 'Legal Size';
 
         formatAllDays();
         checkAllDays();
-      }      
+      }
     </script>
-  
-
-</body></html>
+  </body>
+</html>
