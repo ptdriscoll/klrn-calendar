@@ -4,7 +4,7 @@
 
 A browser-based tool for creating, maintaining and printing KLRN TV's monthly Prime Time Schedule.
 
-<kbd><img src="images/KLRN-calendar-Aug-2026.jpg" width="700" /></kbd>
+<img src="images/KLRN-calendar-Aug-2026.jpg" width="700" />
 
 ## How it works
 
