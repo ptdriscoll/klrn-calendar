@@ -817,11 +817,12 @@
       async function confirmPdfImport(importInfo) {
         const current = getCalendarMonth();
         const importedMonth = `${importInfo.monthName} ${importInfo.year}`;
+        const articleSuffix = /^[aeiou]/i.test(importInfo.monthName) ? 'n' : '';
         let message;
 
         if (!current) {
           message =
-            `Create a ${importedMonth} calendar with ` +
+            `Create a${articleSuffix} ${importedMonth} calendar with ` +
             `${importInfo.programCount} imported programs?`;
             
         } else {
